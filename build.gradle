@@ -1,0 +1,38 @@
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+
+dependencies {
+    provided 'org.apache.storm:storm-core:1.0.3'
+    provided 'org.apache.storm:storm-redis:1.0.3'
+    provided 'org.apache.storm:storm-mongodb:1.0.3'
+    compile 'com.google.code.gson:gson:2.8.0'
+}
+
+jar {
+    dependsOn configurations.runtime
+    from {
+        (configurations.runtime - configurations.provided).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    manifest {
+        attributes 'Implementation-Title': 'Athena Project', 'Implementation-Version': 1.0
+        attributes 'Main-Class': 'MainTopology'
+    }
+}
