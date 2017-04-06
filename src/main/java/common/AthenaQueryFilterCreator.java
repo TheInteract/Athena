@@ -26,14 +26,44 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                 } else {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
                 }
-            } else {
-//                values.add(doc.get(field));
-                if (baseFilter == null) {
-                    baseFilter = Filters.eq(field, "To be added");
-                } else {
-                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
+            }
+//            else {
+////                values.add(doc.get(field));
+//                if (baseFilter == null) {
+//                    baseFilter = Filters.eq(field, "To be added");
+//                } else {
+//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
+//                }
+//            }
+        }
+        return baseFilter;
+    }
+
+    public Bson createFilter(ITuple input, String from, String to) {
+        Bson baseFilter = null;
+        for(String field: fields) {
+            String tempField = null;
+            if (from != null && to != null) {
+                if (field.equals(from)) {
+                    tempField = field;
+                    field = to;
                 }
             }
+            if(input.contains(tempField == null ? field : tempField)) {
+                if (baseFilter == null) {
+                    baseFilter = Filters.eq(field, input.getValueByField(tempField == null ? field : tempField));
+                } else {
+                    baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(tempField == null ? field : tempField)));
+                }
+            }
+//            else {
+////                values.add(doc.get(field));
+//                if (baseFilter == null) {
+//                    baseFilter = Filters.eq(field, "To be added");
+//                } else {
+//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
+//                }
+//            }
         }
         return baseFilter;
     }
@@ -47,14 +77,15 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                 } else {
                     baseFilter = Filters.or(baseFilter, Filters.eq(field, input.getValueByField(field)));
                 }
-            } else {
-//                values.add(doc.get(field));
-                if (baseFilter == null) {
-                    baseFilter = Filters.eq(field, "To be added");
-                } else {
-                    baseFilter = Filters.or(baseFilter, Filters.eq(field, "To be added"));
-                }
             }
+//            else {
+////                values.add(doc.get(field));
+//                if (baseFilter == null) {
+//                    baseFilter = Filters.eq(field, "To be added");
+//                } else {
+//                    baseFilter = Filters.or(baseFilter, Filters.eq(field, "To be added"));
+//                }
+//            }
         }
         return baseFilter;
     }

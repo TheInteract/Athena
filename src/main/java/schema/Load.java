@@ -3,6 +3,8 @@ package schema;
 import org.apache.storm.tuple.Values;
 import schema.actions.LoadAction;
 
+import java.lang.reflect.Field;
+
 /**
  * Created by Chao on 4/6/2017 AD.
  */

@@ -49,11 +49,28 @@ public class AthenaLookupMapper implements MongoLookupMapper {
             if(input.contains(field)) {
                 document.append(field, input.getValueByField(field));
             } else {
-//                values.add(doc.get(field));
                 document.append(field, "To be added");
             }
         }
-        //$set operator: Sets the value of a field in a document.
+        return document;
+    }
+
+    public Document toDocument(ITuple input, String from, String to) {
+        Document document = new Document();
+        for(String field : fields){
+            String tempField = null;
+            if (from != null && to != null) {
+                if (field.equals(from)) {
+                    tempField = field;
+                    field = to;
+                }
+            }
+            if(input.contains(tempField == null ? field : tempField)) {
+                document.append(field, input.getValueByField(tempField == null ? field : tempField));
+            } else {
+                document.append(field, "To be added");
+            }
+        }
         return document;
     }
 
