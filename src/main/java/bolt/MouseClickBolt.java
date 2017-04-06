@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import common.MongoLookupMapper;
-import org.apache.commons.lang.Validate;
 import org.apache.storm.mongodb.bolt.AbstractMongoBolt;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.BatchHelper;
 import org.apache.storm.utils.TupleUtils;
 import org.bson.Document;
@@ -26,6 +26,7 @@ public class MouseClickBolt extends AbstractMongoBolt {
     private static final int DEFAULT_FLUSH_INTERVAL_SECS = 1;
 
     private MongoLookupMapper mapper;
+    private MongoLookupMapper updateMapper;
 
     private boolean ordered = true;  //default is ordered.
 
@@ -35,12 +36,13 @@ public class MouseClickBolt extends AbstractMongoBolt {
 
     private int flushIntervalSecs = DEFAULT_FLUSH_INTERVAL_SECS;
 
-    public MouseClickBolt(String url, String collectionName, MongoLookupMapper mapper) {
+    public MouseClickBolt(String url, String collectionName, MongoLookupMapper mapper, MongoLookupMapper updateMapper) {
         super(url, collectionName);
 
-        Validate.notNull(mapper, "MongoMapper can not be null");
+//        Validate.notNull(mapper, "MongoMapper can not be null");
 
         this.mapper = mapper;
+        this.updateMapper = updateMapper;
     }
 
     @Override
@@ -60,17 +62,27 @@ public class MouseClickBolt extends AbstractMongoBolt {
     }
 
     private void flushTuples(){
+        List<Tuple> tuples = new LinkedList<>();
         List<Document> docs = new LinkedList<>();
         for (Tuple t : batchHelper.getBatchTuples()) {
             Document doc = mapper.toDocument(t);
             docs.add(doc);
+            tuples.add(t);
         }
         mongoClient.insert(docs, ordered);
-        updateUser(docs);
+        updateUser(docs, tuples);
     }
 
-    private void updateUser(List<Document> docs) {
-
+    private void updateUser(List<Document> docs, List<Tuple> tuples) {
+        int i = 0;
+        for (Document doc : docs) {
+            Tuple tuple = tuples.get(i);
+            List<Values> valuesList = updateMapper.toTuple(tuple, doc, "actionId", "_id");
+            for (Values values : valuesList) {
+                this.collector.emit(tuple, values);
+            }
+            i++;
+        }
     }
 
     public MouseClickBolt withBatchSize(int batchSize) {
@@ -102,7 +114,7 @@ public class MouseClickBolt extends AbstractMongoBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-
+        updateMapper.declareOutputFields(declarer);
     }
 
 }

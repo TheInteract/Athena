@@ -21,15 +21,20 @@ public class AthenaLookupMapper implements MongoLookupMapper {
     }
 
     @Override
-    public List<Values> toTuple(ITuple input, Document doc) {
+    public List<Values> toTuple(ITuple input, Document doc, String from, String to) {
         Values values = new Values();
 
         for(String field : fields) {
+            if (from != null && to != null) {
+                if (field.equals(from)) {
+                    field = to;
+                }
+            }
             if(input.contains(field)) {
                 values.add(input.getValueByField(field));
             } else {
-//                values.add(doc.get(field));
-                values.add("To be added");
+                values.add(doc.get(field));
+//                values.add("To be added");
             }
         }
         List<Values> result = new ArrayList<Values>();
@@ -37,6 +42,7 @@ public class AthenaLookupMapper implements MongoLookupMapper {
         return result;
     }
 
+    @Override
     public Document toDocument(ITuple input) {
         Document document = new Document();
         for(String field : fields){

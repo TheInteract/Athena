@@ -1,6 +1,5 @@
 package bolt;
 
-import common.AthenaLookupMapper;
 import common.AthenaMongoClient;
 import common.AthenaQueryFilterCreator;
 import common.MongoLookupMapper;
@@ -18,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Chao on 4/3/2017 AD.
+ * Created by Chao on 4/4/2017 AD.
  */
-public class UserProcessBolt extends BaseRichBolt {
+public class UserFinderBolt extends BaseRichBolt {
 
     private AthenaQueryFilterCreator queryCreator;
     private MongoLookupMapper mapper;
@@ -29,7 +28,7 @@ public class UserProcessBolt extends BaseRichBolt {
     private OutputCollector collector;
     private AthenaMongoClient mongoClient;
 
-    public UserProcessBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, MongoLookupMapper mapper) {
+    public UserFinderBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, MongoLookupMapper mapper) {
         this.url = url;
         this.collectionName = collectionName;
 //        Validate.notNull(queryCreator, "QueryFilterCreator can not be null");
@@ -47,13 +46,10 @@ public class UserProcessBolt extends BaseRichBolt {
 
         try{
             //get query filter
-            Bson filter = queryCreator.createFilter(tuple);
-            //find document from mongodb
-            MongoLookupMapper createMapper = new AthenaLookupMapper().withFields(queryCreator.getFields());
-            Document updateDocument = createMapper.toDocument(tuple);
-            Document doc = mongoClient.findAndInsert(filter, updateDocument);
+            Bson filter = queryCreator.createFilterOr(tuple);
+            Document doc = mongoClient.find(filter);
             //get storm values and emit
-            List<Values> valuesList = mapper.toTuple(tuple, doc, null, null);
+            List<Values> valuesList = mapper.toTuple(tuple, doc, "userId", "_id");
             for (Values values : valuesList) {
                 this.collector.emit(tuple, values);
             }

@@ -2,6 +2,7 @@ package spout;
 
 import common.JsonMapper;
 import org.apache.log4j.Logger;
+import org.apache.storm.redis.common.config.JedisPoolConfig;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -10,7 +11,6 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.utils.Utils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 import schema.MouseClick;
 
@@ -102,7 +102,7 @@ public class MouseClickSpout extends BaseRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this._collector = collector;
         this.queue = new LinkedBlockingQueue<>(1000);
-        this.pool = new JedisPool(new JedisPoolConfig(),host,port);
+        this.pool = new JedisPool();
         this.mapper = new JsonMapper();
         this.listener = new ListenerThread(queue,pool,pattern);
         this.listener.start();

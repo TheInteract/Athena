@@ -20,7 +20,7 @@ public interface MongoLookupMapper extends Serializable {
      * @param doc the mongo document
      * @return a List of storm values that can be emitted. Each item in list is emitted as an output tuple.
      */
-    List<Values> toTuple(ITuple input, Document doc);
+    List<Values> toTuple(ITuple input, Document doc, String from, String to);
 
     Document toDocument(ITuple input);
 

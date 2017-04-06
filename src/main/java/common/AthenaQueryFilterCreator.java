@@ -10,6 +10,8 @@ import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Filters;
 
+import java.io.Serializable;
+
 public class AthenaQueryFilterCreator implements QueryFilterCreator {
 
     private String[] fields;
@@ -30,6 +32,27 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                     baseFilter = Filters.eq(field, "To be added");
                 } else {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
+                }
+            }
+        }
+        return baseFilter;
+    }
+
+    public Bson createFilterOr(ITuple input) {
+        Bson baseFilter = null;
+        for(String field: fields) {
+            if(input.contains(field)) {
+                if (baseFilter == null) {
+                    baseFilter = Filters.eq(field, input.getValueByField(field));
+                } else {
+                    baseFilter = Filters.or(baseFilter, Filters.eq(field, input.getValueByField(field)));
+                }
+            } else {
+//                values.add(doc.get(field));
+                if (baseFilter == null) {
+                    baseFilter = Filters.eq(field, "To be added");
+                } else {
+                    baseFilter = Filters.or(baseFilter, Filters.eq(field, "To be added"));
                 }
             }
         }

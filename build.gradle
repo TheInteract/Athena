@@ -15,8 +15,8 @@ configurations {
 
 dependencies {
     provided 'org.apache.storm:storm-core:1.0.3'
-    provided 'org.apache.storm:storm-redis:1.0.3'
-    provided 'org.apache.storm:storm-mongodb:1.0.3'
+    compile 'org.apache.storm:storm-redis:1.0.3'
+    compile 'org.apache.storm:storm-mongodb:1.0.3'
     compile 'com.google.code.gson:gson:2.8.0'
 }
 
