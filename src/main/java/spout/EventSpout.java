@@ -12,6 +12,7 @@ import org.apache.storm.utils.Utils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
+import schema.AthenaObject;
 import schema.MouseClick;
 
 import java.util.Map;
@@ -20,10 +21,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by Chao on 3/31/2017 AD.
  */
-public class MouseClickSpout extends BaseRichSpout {
+public class EventSpout extends BaseRichSpout {
 
     static final long serialVersionUID = 737015318988609460L;
-    static Logger LOG = Logger.getLogger(MouseClickSpout.class);
+    static Logger LOG = Logger.getLogger(EventSpout.class);
 
     SpoutOutputCollector _collector;
     final String host;
@@ -33,17 +34,22 @@ public class MouseClickSpout extends BaseRichSpout {
     JedisPool pool;
     ListenerThread listener;
     JsonMapper mapper;
+    Class<? extends AthenaObject> targetClass;
+    String[] fields;
 
-    public MouseClickSpout(String host, int port, String pattern) {
+    public EventSpout(String host, int port, String pattern, Class<? extends AthenaObject> targetClass, String[] fields) {
         this.host = host;
         this.port = port;
         this.pattern = pattern;
+        this.targetClass = targetClass;
+        this.fields = fields;
     }
 
     class ListenerThread extends Thread {
         LinkedBlockingQueue<String> queue;
         JedisPool pool;
         String pattern;
+
 
         public ListenerThread(LinkedBlockingQueue<String> queue, JedisPool pool, String pattern) {
             this.queue = queue;
@@ -118,7 +124,7 @@ public class MouseClickSpout extends BaseRichSpout {
         if(ret==null) {
             Utils.sleep(50);
         } else {
-            this._collector.emit(mapper.toValues(ret, MouseClick.class));
+            this._collector.emit(mapper.toValues(ret, targetClass));
         }
     }
 
@@ -133,7 +139,7 @@ public class MouseClickSpout extends BaseRichSpout {
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("issueTime", "type", "API_KEY_PUBLIC", "deviceCode", "userCode", "target", "timeStamp"));
+        declarer.declare(new Fields(this.fields));
     }
 
     public boolean isDistributed() {
