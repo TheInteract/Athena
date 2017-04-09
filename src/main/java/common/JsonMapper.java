@@ -1,9 +1,10 @@
 package common;
 
 import com.google.gson.*;
-import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import schema.AthenaObject;
+
+import java.util.Date;
 
 /**
  * Created by Chao on 4/3/2017 AD.
@@ -11,8 +12,9 @@ import schema.AthenaObject;
 public class JsonMapper {
     private Gson gson;
 
-    public JsonMapper() {
-        this.gson = new GsonBuilder().serializeNulls().create();
+    public JsonMapper()
+    {
+        this.gson = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDateDeserializer()).serializeNulls().create();
     }
 
     public Values toValues(String input, Class<? extends AthenaObject> inputClass) {

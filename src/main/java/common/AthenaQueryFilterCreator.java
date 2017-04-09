@@ -90,6 +90,30 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
         return baseFilter;
     }
 
+    public Bson customCreateSession(ITuple input) {
+        Bson baseFilter = null;
+        for(String field: fields) {
+            if(input.contains(field)) {
+                if (baseFilter == null) {
+                    baseFilter = Filters.eq(field, input.getValueByField(field));
+                } else {
+                    baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
+                }
+            }
+//            else {
+////                values.add(doc.get(field));
+//                if (baseFilter == null) {
+//                    baseFilter = Filters.eq(field, "To be added");
+//                } else {
+//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
+//                }
+//            }
+        }
+        Bson timeFilter = Filters.lt("issueTime", input.getValueByField("issueTime"));
+        baseFilter = Filters.and(baseFilter, timeFilter);
+        return baseFilter;
+    }
+
     public AthenaQueryFilterCreator withField(String... field) {
         this.fields = field;
         return this;

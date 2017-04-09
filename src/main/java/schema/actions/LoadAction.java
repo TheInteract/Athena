@@ -1,40 +1,42 @@
 package schema.actions;
 
+import java.util.Date;
+
 /**
  * Created by Chao on 4/6/2017 AD.
  */
 public class LoadAction {
-    private String timeStamp;
+    private Date timeStamp;
     private String href;
-    private String scrollX;
-    private String scrollY;
-    private String innerHeight;
-    private String innerWidth;
+    private int scrollX;
+    private int scrollY;
+    private int innerHeight;
+    private int innerWidth;
     private String appCode;
     private String appName;
     private String appVersion;
 
-    public String getTimeStamp() {
-        return this.timeStamp;
+    public Date getTimeStamp() {
+        return timeStamp;
     }
 
     public String getHref() {
-        return this.href;
+        return href;
     }
 
-    public String getScrollX() {
+    public int getScrollX() {
         return scrollX;
     }
 
-    public String getScrollY() {
+    public int getScrollY() {
         return scrollY;
     }
 
-    public String getInnerHeight() {
+    public int getInnerHeight() {
         return innerHeight;
     }
 
-    public String getInnerWidth() {
+    public int getInnerWidth() {
         return innerWidth;
     }
 

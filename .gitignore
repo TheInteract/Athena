@@ -32,6 +32,6 @@ proguard/
 .gradletasknamecache
 .gradle/
 build/
-bin/
 logs/
 .DS_Store
+.settings

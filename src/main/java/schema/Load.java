@@ -4,12 +4,13 @@ import org.apache.storm.tuple.Values;
 import schema.actions.LoadAction;
 
 import java.lang.reflect.Field;
+import java.util.Date;
 
 /**
  * Created by Chao on 4/6/2017 AD.
  */
 public class Load implements AthenaObject {
-    private String issueTime;
+    private Date issueTime;
     private String type;
     private String API_KEY_PUBLIC;
     private String deviceCode;

@@ -6,6 +6,7 @@ package common;
 
 import java.util.List;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import org.bson.Document;
@@ -50,6 +51,10 @@ public class AthenaMongoClient {
         collection.insertMany(documents, options);
     }
 
+    public void insertOne(Document document) {
+        collection.insertOne(document);
+    }
+
     /**
      * Update a single or all documents in the collection according to the specified arguments.
      * When upsert set to true, the new document will be inserted if there are no matches to the query filter.
@@ -80,6 +85,10 @@ public class AthenaMongoClient {
     public Document find(Bson filter) {
         //TODO batch finding
         return collection.find(filter).first();
+    }
+
+    public FindIterable<Document> findLatest(Bson filter, Bson field) {
+        return collection.find(filter).sort(field).limit(1);
     }
 
     /**

@@ -8,8 +8,10 @@ import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.AlreadyAliveException;
 import org.apache.storm.generated.AuthorizationException;
 import org.apache.storm.generated.InvalidTopologyException;
+import org.apache.storm.shade.org.apache.commons.lang.ArrayUtils;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.utils.Utils;
+import schema.APICall;
 import schema.Load;
 import schema.MouseClick;
 import spout.EventSpout;
@@ -26,12 +28,102 @@ public class MainTopology {
     private static String mongoHost;
     private static String url;
     private static TopologyBuilder builder;
-    private static String[] mouseClickField, loadField;
+    private static String[] mouseClickField, loadField, APICallField;
 
 
     private static void setupSpout() {
         builder.setSpout("mouseClickSpout", new EventSpout(redisHost,redisPort,"onclick", MouseClick.class, mouseClickField));
         builder.setSpout("loadSpout", new EventSpout(redisHost,redisPort,"onload", Load.class, loadField));
+        builder.setSpout("APICallSpout", new EventSpout(redisHost,redisPort,"onAPICall", APICall.class, APICallField));
+    }
+
+    private static void setupLoadBolts() {
+        String[] productFinderFields = replaceFieldElement(loadField, "API_KEY_PUBLIC", "productId");
+        MongoLookupMapper productMapper = new AthenaLookupMapper()
+                .withFields(productFinderFields);
+        AthenaQueryFilterCreator procuctFilterCreator = new AthenaQueryFilterCreator()
+                .withField("API_KEY_PUBLIC");
+        builder.setBolt("loadProductFinderBolt", new ProductFinderBolt(url, "product",
+                procuctFilterCreator, productMapper), 2).shuffleGrouping("loadSpout");
+
+
+        String[] userFinderFields = replaceFieldElement(productFinderFields, "userCode", "userId");
+        MongoLookupMapper userMapper = new AthenaLookupMapper()
+                .withFields(userFinderFields);
+        AthenaQueryFilterCreator userFilterCreator = new AthenaQueryFilterCreator()
+                .withField("deviceCode", "userCode");
+        builder.setBolt("loadUserFinderBolt", new UserFinderBolt(url, "user",
+                userFilterCreator, userMapper), 2).shuffleGrouping("loadProductFinderBolt");
+
+
+        String[] sessionTypeCreatorFields = addFieldElement(userFinderFields, "sessionTypeId");
+        MongoLookupMapper mouseClickMapper = new AthenaLookupMapper()
+                .withFields(sessionTypeCreatorFields);
+        AthenaQueryFilterCreator mouseClickFilterCreator = new AthenaQueryFilterCreator()
+                .withField("productId", "url", "type");
+        builder.setBolt("loadSessionTypeCreatorBolt", new SessionTypeCreatorBolt(url, "sessionTypes",
+                mouseClickFilterCreator, mouseClickMapper), 2).shuffleGrouping("loadUserFinderBolt");
+
+
+        String[] sessionInsertFields = {"userId", "productId", "deviceCode", "issueTime", "sessionTypeId"};
+        String[] sessionCreatorFields = addFieldElement(sessionTypeCreatorFields, "_id");
+        MongoLookupMapper sessionInsertMapper = new AthenaLookupMapper()
+                .withFields(sessionInsertFields);
+        MongoLookupMapper sessionEmitMapper = new AthenaLookupMapper().withFields(sessionCreatorFields);
+        builder.setBolt("loadSessionCreatorBolt", new SessionCreatorBolt(url, "sessions", sessionInsertMapper, sessionEmitMapper), 2).shuffleGrouping("loadSessionTypeCreatorBolt");
+
+
+        String[] actionFields = {"issueTime", "type", "timeStamp", "url", "scrollX", "scrollY", "innerHeight", "innerWidth", "appCode", "appName", "appVersion"};
+        AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId");
+        builder.setBolt("loadUpdateClickBolt", new ActionPusherBolt(url, "sessions", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 2).shuffleGrouping("loadSessionCreatorBolt");
+    }
+
+    private static void setupMouseClickBolts() {
+        String[] productFinderFields = replaceFieldElement(mouseClickField, "API_KEY_PUBLIC", "productId");
+        MongoLookupMapper productMapper = new AthenaLookupMapper()
+                .withFields(productFinderFields);
+        AthenaQueryFilterCreator procuctFilterCreator = new AthenaQueryFilterCreator()
+                .withField("API_KEY_PUBLIC");
+        builder.setBolt("mouseClickProductFinderBolt", new ProductFinderBolt(url, "product",
+                procuctFilterCreator, productMapper), 1).shuffleGrouping("mouseClickSpout");
+
+
+        String[] userFinderFields = replaceFieldElement(productFinderFields, "userCode", "userId");
+        MongoLookupMapper userMapper = new AthenaLookupMapper()
+                .withFields(userFinderFields);
+        AthenaQueryFilterCreator userFilterCreator = new AthenaQueryFilterCreator()
+                .withField("deviceCode", "userCode");
+        builder.setBolt("mouseClickUserFinderBolt", new UserFinderBolt(url, "user",
+                userFilterCreator, userMapper), 1).shuffleGrouping("mouseClickProductFinderBolt");
+
+
+        String[] actionFields = {"issueTime", "type", "timeStamp", "target"};
+        AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId");
+        builder.setBolt("mouseClickUpdateClickBolt", new ActionPusherBolt(url, "sessions", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("mouseClickUserFinderBolt");
+    }
+
+    private static void setupAPICallBolts() {
+        String[] productFinderFields = replaceFieldElement(APICallField, "API_KEY_PUBLIC", "productId");
+        MongoLookupMapper productMapper = new AthenaLookupMapper()
+                .withFields(productFinderFields);
+        AthenaQueryFilterCreator procuctFilterCreator = new AthenaQueryFilterCreator()
+                .withField("API_KEY_PUBLIC");
+        builder.setBolt("APICallProductFinderBolt", new ProductFinderBolt(url, "product",
+                procuctFilterCreator, productMapper), 1).shuffleGrouping("APICallSpout");
+
+
+        String[] userFinderFields = replaceFieldElement(productFinderFields, "userCode", "userId");
+        MongoLookupMapper userMapper = new AthenaLookupMapper()
+                .withFields(userFinderFields);
+        AthenaQueryFilterCreator userFilterCreator = new AthenaQueryFilterCreator()
+                .withField("deviceCode", "userCode");
+        builder.setBolt("APICallUserFinderBolt", new UserFinderBolt(url, "user",
+                userFilterCreator, userMapper), 1).shuffleGrouping("APICallProductFinderBolt");
+
+
+        String[] actionFields = {"issueTime", "type", "endpoint", "method"};
+        AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId");
+        builder.setBolt("APICallUpdateClickBolt", new ActionPusherBolt(url, "sessions", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("APICallUserFinderBolt");
     }
 
     private static String[] replaceFieldElement(String[] input, String from, String to) {
@@ -54,6 +146,10 @@ public class MainTopology {
         return longer;
     }
 
+    private static String[] combineField(String[] one, String[] two) {
+        return (String[]) ArrayUtils.addAll(one, two);
+    }
+
     public static void main(String[] args) {
         isProduction = args[0] == null;
         dbName = isProduction ? "/Interact" : "/interact";
@@ -64,68 +160,13 @@ public class MainTopology {
 
         mouseClickField = new String[] {"issueTime", "type", "API_KEY_PUBLIC", "deviceCode", "userCode", "timeStamp", "target"};
         loadField = new String[] {"issueTime", "type", "API_KEY_PUBLIC", "deviceCode", "userCode", "timeStamp", "url", "scrollX", "scrollY", "innerHeight", "innerWidth", "appCode", "appName", "appVersion"};
+        APICallField = new String[] {"issueTime", "type", "API_KEY_PUBLIC", "deviceCode", "userCode", "endpoint", "method"};
 
         setupSpout();
 
-
-        String[] productFinderFields = replaceFieldElement(loadField, "API_KEY_PUBLIC", "productId");
-        MongoLookupMapper productMapper = new AthenaLookupMapper()
-                .withFields(productFinderFields);
-        AthenaQueryFilterCreator procuctFilterCreator = new AthenaQueryFilterCreator()
-                .withField("API_KEY_PUBLIC");
-        builder.setBolt("productFinderBolt", new ProductFinderBolt(url, "product",
-                procuctFilterCreator, productMapper), 1).shuffleGrouping("loadSpout");
-
-
-        String[] userFinderFields = replaceFieldElement(productFinderFields, "userCode", "userId");
-        MongoLookupMapper userMapper = new AthenaLookupMapper()
-                .withFields(userFinderFields);
-        AthenaQueryFilterCreator userFilterCreator = new AthenaQueryFilterCreator()
-                .withField("deviceCode", "userCode");
-        builder.setBolt("userFinderBolt", new UserFinderBolt(url, "user",
-                userFilterCreator, userMapper), 1).shuffleGrouping("productFinderBolt");
-
-        String[] sessionTypeCreatorFields = addFieldElement(productFinderFields, "sessionTypeId");
-        MongoLookupMapper mouseClickMapper = new AthenaLookupMapper()
-                .withFields(sessionTypeCreatorFields);
-        AthenaQueryFilterCreator mouseClickFilterCreator = new AthenaQueryFilterCreator()
-                .withField("productId", "url", "type");
-        builder.setBolt("sessionCreatorBolt", new SessionTypeCreatorBolt(url, "sessionTypes",
-                mouseClickFilterCreator, mouseClickMapper), 1).shuffleGrouping("userFinderBolt");
-//        MongoLookupMapper productMapper = new AthenaLookupMapper()
-//                .withFields("userCode", "deviceCode", "productId", "issueTime", "target", "timeStamp");
-//        AthenaQueryFilterCreator procuctFilterCreator = new AthenaQueryFilterCreator()
-//                .withField("API_KEY_PUBLIC");
-//        builder.setBolt("productFinderBolt", new ProductFinderBolt(url, "product",
-//                procuctFilterCreator, productMapper), 1).shuffleGrouping("mouseClickSpout");
-//
-//
-//        MongoLookupMapper userMapper = new AthenaLookupMapper()
-//                .withFields("deviceCode", "productId", "issueTime", "target", "timeStamp", "userId");
-//        AthenaQueryFilterCreator userFilterCreator = new AthenaQueryFilterCreator()
-//                .withField("deviceCode", "userCode");
-//        builder.setBolt("userFinderBolt", new UserFinderBolt(url, "user",
-//                userFilterCreator, userMapper), 1).shuffleGrouping("productFinderBolt");
-//
-//
-//        MongoLookupMapper mouseClickMapper = new AthenaLookupMapper()
-//                .withFields("userId", "productId", "deviceCode", "issueTime", "target", "timeStamp");
-//        AthenaQueryFilterCreator mouseClickFilterCreator = new AthenaQueryFilterCreator()
-//                .withField("userId", "deviceCode", "productId");
-//        builder.setBolt("userClickBolt", new UserProcessBolt(url, "processresult",
-//                mouseClickFilterCreator, mouseClickMapper), 1).shuffleGrouping("userFinderBolt");
-//
-//
-//        MongoLookupMapper mouseClickBoltMapper = new AthenaLookupMapper()
-//                .withFields("userId", "productId", "deviceCode", "issueTime", "target", "timeStamp");
-//        MongoLookupMapper resultUpdateMapper = new AthenaLookupMapper().withFields("userId", "productId", "deviceCode", "actionId");
-//        builder.setBolt("actionClickBolt", new MouseClickBolt(url, "mouseclickaction", mouseClickBoltMapper, resultUpdateMapper), 1).shuffleGrouping("userClickBolt");
-//
-//
-//        AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId");
-//        builder.setBolt("updateClickBolt", new ResultUpdateBolt(url, "processresult", updateFilterCreator, "mouseclick").withUpsert(false).withMany(false), 1).shuffleGrouping("actionClickBolt");
-//
-
+        setupLoadBolts();
+        setupMouseClickBolts();
+        setupAPICallBolts();
 
         Config conf = new Config();
         conf.setDebug(true);
