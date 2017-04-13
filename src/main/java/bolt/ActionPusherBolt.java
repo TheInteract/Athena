@@ -3,7 +3,6 @@ package bolt;
 /**
  * Created by Chao on 4/7/2017 AD.
  */
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import common.AthenaMongoClient;
 import common.AthenaQueryFilterCreator;

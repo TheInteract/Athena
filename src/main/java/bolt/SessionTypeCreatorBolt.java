@@ -44,10 +44,10 @@ public class SessionTypeCreatorBolt extends BaseRichBolt {
 
         try{
             //get query filter
-            Bson filter = queryCreator.createFilter(tuple, "type", "startType");
+            Bson filter = queryCreator.createFilter(tuple);
             //find document from mongodb
             AthenaLookupMapper createMapper = new AthenaLookupMapper().withFields(queryCreator.getFields());
-            Document updateDocument = createMapper.toDocument(tuple, "type", "startType");
+            Document updateDocument = createMapper.toDocument(tuple);
             Document doc = mongoClient.findAndInsert(filter, updateDocument);
             //get storm values and emit
             List<Values> valuesList = mapper.toTuple(tuple, doc, "sessionTypeId", "_id");

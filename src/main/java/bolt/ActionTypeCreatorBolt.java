@@ -1,40 +1,38 @@
 package bolt;
 
-/**
- * Created by Chao on 4/4/2017 AD.
- */
+import common.AthenaLookupMapper;
 import common.AthenaMongoClient;
 import common.AthenaQueryFilterCreator;
+import common.MongoLookupMapper;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
-import org.apache.storm.tuple.ITuple;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.TupleUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.util.List;
 import java.util.Map;
 
-public class ResultUpdateBolt extends BaseRichBolt {
+/**
+ * Created by Chao on 4/13/2017 AD.
+ */
+public class ActionTypeCreatorBolt extends BaseRichBolt {
 
     private AthenaQueryFilterCreator queryCreator;
-    private String url, collectionName, type;
+    private MongoLookupMapper mapper;
+    private String url, collectionName;
 
-    private AthenaMongoClient mongoClient;
     private OutputCollector collector;
+    private AthenaMongoClient mongoClient;
 
-    private boolean upsert;  //the default is false.
-    private boolean many;  //the default is false.
-
-    public ResultUpdateBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, String type) {
+    public ActionTypeCreatorBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, MongoLookupMapper mapper) {
         this.url = url;
+        this.mapper = mapper;
         this.collectionName = collectionName;
-        this.type = type;
-
-//        Validate.notNull(queryCreator, "QueryFilterCreator can not be null");
-
         this.queryCreator = queryCreator;
     }
 
@@ -45,34 +43,22 @@ public class ResultUpdateBolt extends BaseRichBolt {
         }
 
         try{
-            //get document
-            Document doc = toDocument(tuple);
             //get query filter
             Bson filter = queryCreator.createFilter(tuple);
-            mongoClient.update(filter, doc, upsert, many);
+            //find document from mongodb
+            AthenaLookupMapper createMapper = new AthenaLookupMapper().withFields(queryCreator.getFields());
+            Document updateDocument = createMapper.toDocument(tuple);
+            Document doc = mongoClient.findAndInsert(filter, updateDocument);
+            //get storm values and emit
+            List<Values> valuesList = mapper.toTuple(tuple, doc, "actionTypeId", "_id");
+            for (Values values : valuesList) {
+                this.collector.emit(tuple, values);
+            }
             this.collector.ack(tuple);
         } catch (Exception e) {
             this.collector.reportError(e);
             this.collector.fail(tuple);
         }
-    }
-
-    private Document toDocument(ITuple tuple) {
-        Document document = new Document();
-        document.append("actionId", tuple.getValueByField("actionId"));
-        document.append("type", this.type);
-        //$set operator: Sets the value of a field in a document.
-        return new Document("$push", new Document("actionList", document));
-    }
-
-    public ResultUpdateBolt withUpsert(boolean upsert) {
-        this.upsert = upsert;
-        return this;
-    }
-
-    public ResultUpdateBolt withMany(boolean many) {
-        this.many = many;
-        return this;
     }
 
     public void prepare(Map stormConf, TopologyContext context,
@@ -85,9 +71,8 @@ public class ResultUpdateBolt extends BaseRichBolt {
         this.mongoClient.close();
     }
 
-    @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-
+        mapper.declareOutputFields(declarer);
     }
 
 }

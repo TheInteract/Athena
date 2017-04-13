@@ -3,27 +3,23 @@ package schema;
 import org.apache.storm.tuple.Values;
 import schema.actions.LoadAction;
 
-import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Created by Chao on 4/6/2017 AD.
  */
-public class Load implements AthenaObject {
-    private Date issueTime;
-    private String type;
-    private String API_KEY_PUBLIC;
-    private String deviceCode;
-    private String userCode;
+public class Load extends AthenaObject implements AthenaInterface {
     private LoadAction action;
 
     public Values getValueList() {
         Values values = new Values();
-        values.add(this.issueTime);
-        values.add(this.type.replace("on", ""));
-        values.add(this.API_KEY_PUBLIC);
-        values.add(this.deviceCode);
-        values.add(this.userCode);
+        values.add(this.getIssueTime());
+        values.add(this.getType().replace("on", ""));
+        values.add(this.getAPI_KEY_PUBLIC());
+        values.add(Arrays.asList(this.getVersions()));
+        values.add(this.getDeviceCode());
+        values.add(this.getUserCode());
         values.add(this.action.getTimeStamp());
         values.add(this.action.getHref());
         values.add(this.action.getScrollX());

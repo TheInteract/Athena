@@ -2,20 +2,20 @@ package spout;
 
 import common.JsonMapper;
 import org.apache.log4j.Logger;
-import org.apache.storm.redis.common.config.JedisPoolConfig;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
+import org.apache.storm.tuple.MessageId;
 import org.apache.storm.utils.Utils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
-import schema.AthenaObject;
-import schema.MouseClick;
+import schema.AthenaInterface;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -34,10 +34,11 @@ public class EventSpout extends BaseRichSpout {
     JedisPool pool;
     ListenerThread listener;
     JsonMapper mapper;
-    Class<? extends AthenaObject> targetClass;
+    Class<? extends AthenaInterface> targetClass;
     String[] fields;
+    Random rand;
 
-    public EventSpout(String host, int port, String pattern, Class<? extends AthenaObject> targetClass, String[] fields) {
+    public EventSpout(String host, int port, String pattern, Class<? extends AthenaInterface> targetClass, String[] fields) {
         this.host = host;
         this.port = port;
         this.pattern = pattern;
@@ -108,8 +109,9 @@ public class EventSpout extends BaseRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this._collector = collector;
         this.queue = new LinkedBlockingQueue<>(1000);
-        this.pool = new JedisPool();
+        this.pool = new JedisPool(this.host, this.port);
         this.mapper = new JsonMapper();
+        this.rand = new Random();
         this.listener = new ListenerThread(queue,pool,pattern);
         this.listener.start();
     }
@@ -124,7 +126,7 @@ public class EventSpout extends BaseRichSpout {
         if(ret==null) {
             Utils.sleep(50);
         } else {
-            this._collector.emit(mapper.toValues(ret, targetClass));
+            this._collector.emit(mapper.toValues(ret, targetClass), MessageId.generateId(rand));
         }
     }
 

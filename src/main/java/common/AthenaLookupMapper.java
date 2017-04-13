@@ -37,7 +37,7 @@ public class AthenaLookupMapper implements MongoLookupMapper {
 //                values.add("To be added");
             }
         }
-        List<Values> result = new ArrayList<Values>();
+        List<Values> result = new ArrayList<>();
         result.add(values);
         return result;
     }

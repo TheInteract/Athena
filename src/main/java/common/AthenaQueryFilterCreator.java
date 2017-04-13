@@ -27,14 +27,6 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
                 }
             }
-//            else {
-////                values.add(doc.get(field));
-//                if (baseFilter == null) {
-//                    baseFilter = Filters.eq(field, "To be added");
-//                } else {
-//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
-//                }
-//            }
         }
         return baseFilter;
     }
@@ -56,14 +48,6 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(tempField == null ? field : tempField)));
                 }
             }
-//            else {
-////                values.add(doc.get(field));
-//                if (baseFilter == null) {
-//                    baseFilter = Filters.eq(field, "To be added");
-//                } else {
-//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
-//                }
-//            }
         }
         return baseFilter;
     }
@@ -73,19 +57,11 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
         for(String field: fields) {
             if(input.contains(field)) {
                 if (baseFilter == null) {
-                    baseFilter = Filters.eq(field, input.getValueByField(field));
+                    baseFilter = Filters.eq("userIdentity", input.getValueByField(field));
                 } else {
-                    baseFilter = Filters.or(baseFilter, Filters.eq(field, input.getValueByField(field)));
+                    baseFilter = Filters.or(baseFilter, Filters.eq("userIdentity", input.getValueByField(field)));
                 }
             }
-//            else {
-////                values.add(doc.get(field));
-//                if (baseFilter == null) {
-//                    baseFilter = Filters.eq(field, "To be added");
-//                } else {
-//                    baseFilter = Filters.or(baseFilter, Filters.eq(field, "To be added"));
-//                }
-//            }
         }
         return baseFilter;
     }
@@ -100,14 +76,6 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
                 }
             }
-//            else {
-////                values.add(doc.get(field));
-//                if (baseFilter == null) {
-//                    baseFilter = Filters.eq(field, "To be added");
-//                } else {
-//                    baseFilter = Filters.and(baseFilter, Filters.eq(field, "To be added"));
-//                }
-//            }
         }
         Bson timeFilter = Filters.lt("issueTime", input.getValueByField("issueTime"));
         baseFilter = Filters.and(baseFilter, timeFilter);

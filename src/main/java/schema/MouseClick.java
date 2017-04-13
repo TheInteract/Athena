@@ -3,26 +3,23 @@ package schema;
 import org.apache.storm.tuple.Values;
 import schema.actions.MouseClickAction;
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Created by Chao on 4/3/2017 AD.
  */
-public class MouseClick implements AthenaObject {
-    private Date issueTime;
-    private String type;
-    private String API_KEY_PUBLIC;
-    private String deviceCode;
-    private String userCode;
+public class MouseClick extends AthenaObject implements AthenaInterface {
     private MouseClickAction action;
 
     public Values getValueList() {
         Values values = new Values();
-        values.add(this.issueTime);
-        values.add(this.type.replace("on", ""));
-        values.add(this.API_KEY_PUBLIC);
-        values.add(this.deviceCode);
-        values.add(this.userCode);
+        values.add(this.getIssueTime());
+        values.add(this.getType().replace("on", ""));
+        values.add(this.getAPI_KEY_PUBLIC());
+        values.add(Arrays.asList(this.getVersions()));
+        values.add(this.getDeviceCode());
+        values.add(this.getUserCode());
         values.add(this.action.getTimeStamp());
         values.add(this.action.getTarget());
         return values;
