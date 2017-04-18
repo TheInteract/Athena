@@ -20,6 +20,7 @@ public class Load extends AthenaObject implements AthenaInterface {
         values.add(Arrays.asList(this.getVersions()));
         values.add(this.getDeviceCode());
         values.add(this.getUserCode());
+        values.add(this.getSessionCode());
         values.add(this.action.getTimeStamp());
         values.add(this.action.getHref());
         values.add(this.action.getScrollX());

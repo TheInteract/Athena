@@ -12,6 +12,7 @@ public class AthenaObject {
     private String deviceCode;
     private String userCode;
     private String[] versions;
+    private String sessionCode;
 
     public Date getIssueTime() {
         return issueTime;
@@ -35,5 +36,9 @@ public class AthenaObject {
 
     public String[] getVersions() {
         return versions;
+    }
+
+    public String getSessionCode() {
+        return sessionCode;
     }
 }

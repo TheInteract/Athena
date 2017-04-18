@@ -20,6 +20,7 @@ public class APICall extends AthenaObject implements AthenaInterface {
         values.add(Arrays.asList(this.getVersions()));
         values.add(this.getDeviceCode());
         values.add(this.getUserCode());
+        values.add(this.getSessionCode());
         values.add(this.action.getUrl());
         values.add(this.action.getMethod());
         return values;

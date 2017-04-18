@@ -19,6 +19,7 @@ public class Blur extends AthenaObject implements AthenaInterface {
         values.add(Arrays.asList(this.getVersions()));
         values.add(this.getDeviceCode());
         values.add(this.getUserCode());
+        values.add(this.getSessionCode());
         values.add(this.action.getTimeStamp());
         values.add(this.action.getHref());
         return values;
