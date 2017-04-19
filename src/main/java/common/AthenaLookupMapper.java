@@ -55,25 +55,6 @@ public class AthenaLookupMapper implements MongoLookupMapper {
         return document;
     }
 
-    public Document toDocument(ITuple input, String from, String to) {
-        Document document = new Document();
-        for(String field : fields){
-            String tempField = null;
-            if (from != null && to != null) {
-                if (field.equals(from)) {
-                    tempField = field;
-                    field = to;
-                }
-            }
-            if(input.contains(tempField == null ? field : tempField)) {
-                document.append(field, input.getValueByField(tempField == null ? field : tempField));
-            } else {
-                document.append(field, "To be added");
-            }
-        }
-        return document;
-    }
-
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(fields));
@@ -84,7 +65,4 @@ public class AthenaLookupMapper implements MongoLookupMapper {
         return this;
     }
 
-    public String[] getFields() {
-        return this.fields;
-    }
 }

@@ -1,6 +1,10 @@
 package schema;
 
+import org.bson.types.ObjectId;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Chao on 4/11/2017 AD.
@@ -34,8 +38,12 @@ public class AthenaObject {
         return userCode;
     }
 
-    public String[] getVersions() {
-        return versions;
+    public List<ObjectId> getVersions() {
+        List<ObjectId> versionList = new ArrayList<>();
+        for (String s : versions) {
+            versionList.add(new ObjectId(s));
+        }
+        return versionList;
     }
 
     public String getSessionCode() {
