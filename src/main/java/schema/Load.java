@@ -17,7 +17,7 @@ public class Load extends AthenaObject implements AthenaInterface {
         values.add(this.getIssueTime());
         values.add(this.getType().replace("on", ""));
         values.add(this.getAPI_KEY_PUBLIC());
-        values.add(Arrays.asList(this.getVersions()));
+        values.add(this.getVersions());
         values.add(this.getDeviceCode());
         values.add(this.getUserCode());
         values.add(this.getSessionCode());
