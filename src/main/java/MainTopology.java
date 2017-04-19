@@ -108,17 +108,17 @@ public class MainTopology {
                 userFilterCreator, userMapper), 1).shuffleGrouping("focusProductFinderBolt");
 
 
-        String[] actionTypeCreatorFields = addFieldElement(userFinderFields, "actionTypeId");
-        MongoLookupMapper actionTypeMapper = new AthenaLookupMapper()
-                .withFields(actionTypeCreatorFields);
-        AthenaQueryFilterCreator actionTypeFilterCreator = new AthenaQueryFilterCreator()
-                .withField("productId", "type", "url");
-        builder.setBolt("focusActionTypeCreatorBolt", new ActionTypeCreatorBolt(url, "actionType",
-                actionTypeFilterCreator, actionTypeMapper), 1).shuffleGrouping("focusUserFinderBolt");
+//        String[] actionTypeCreatorFields = addFieldElement(userFinderFields, "actionTypeId");
+//        MongoLookupMapper actionTypeMapper = new AthenaLookupMapper()
+//                .withFields(actionTypeCreatorFields);
+//        AthenaQueryFilterCreator actionTypeFilterCreator = new AthenaQueryFilterCreator()
+//                .withField("productId", "type", "url");
+//        builder.setBolt("focusActionTypeCreatorBolt", new ActionTypeCreatorBolt(url, "actionType",
+//                actionTypeFilterCreator, actionTypeMapper), 1).shuffleGrouping("focusUserFinderBolt");
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "url", "innerHeight", "innerWidth"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("focusUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("focusActionTypeCreatorBolt");
+        builder.setBolt("focusUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("focusUserFinderBolt");
     }
 
     private static void setupMouseClickBolts() {
@@ -206,18 +206,18 @@ public class MainTopology {
                 userFilterCreator, userMapper), 1).shuffleGrouping("blurProductFinderBolt");
 
 
-        String[] actionTypeCreatorFields = addFieldElement(userFinderFields, "actionTypeId");
-        MongoLookupMapper actionTypeMapper = new AthenaLookupMapper()
-                .withFields(actionTypeCreatorFields);
-        AthenaQueryFilterCreator actionTypeFilterCreator = new AthenaQueryFilterCreator()
-                .withField("productId", "type", "url");
-        builder.setBolt("blurActionTypeCreatorBolt", new ActionTypeCreatorBolt(url, "actionType",
-                actionTypeFilterCreator, actionTypeMapper), 1).shuffleGrouping("blurUserFinderBolt");
+//        String[] actionTypeCreatorFields = addFieldElement(userFinderFields, "actionTypeId");
+//        MongoLookupMapper actionTypeMapper = new AthenaLookupMapper()
+//                .withFields(actionTypeCreatorFields);
+//        AthenaQueryFilterCreator actionTypeFilterCreator = new AthenaQueryFilterCreator()
+//                .withField("productId", "type", "url");
+//        builder.setBolt("blurActionTypeCreatorBolt", new ActionTypeCreatorBolt(url, "actionType",
+//                actionTypeFilterCreator, actionTypeMapper), 1).shuffleGrouping("blurUserFinderBolt");
 
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "url"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("blurUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("blurActionTypeCreatorBolt");
+        builder.setBolt("blurUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("blurUserFinderBolt");
     }
 
     private static void setupUnloadBolts() {
