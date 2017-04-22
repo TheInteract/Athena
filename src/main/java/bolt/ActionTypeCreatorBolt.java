@@ -29,6 +29,8 @@ public class ActionTypeCreatorBolt extends BaseRichBolt {
     private OutputCollector collector;
     private AthenaMongoClient mongoClient;
 
+    private final String[] dataFields = {"url", "target", "endpoint"};
+
     public ActionTypeCreatorBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, MongoLookupMapper mapper) {
         this.url = url;
         this.mapper = mapper;
@@ -44,10 +46,10 @@ public class ActionTypeCreatorBolt extends BaseRichBolt {
 
         try{
             //get query filter
-            Bson filter = queryCreator.createFilter(tuple);
+            Bson filter = queryCreator.createFilterActionType(tuple, this.dataFields);
             //find document from mongodb
             AthenaLookupMapper createMapper = new AthenaLookupMapper().withFields(queryCreator.getFields());
-            Document updateDocument = createMapper.toDocument(tuple);
+            Document updateDocument = createMapper.toDocumentActionType(tuple, this.dataFields);
             Document doc = mongoClient.findAndInsert(filter, updateDocument);
             //get storm values and emit
             List<Values> valuesList = mapper.toTuple(tuple, doc, "actionTypeId", "_id");

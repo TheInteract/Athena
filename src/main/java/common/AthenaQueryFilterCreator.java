@@ -6,11 +6,13 @@ package common;
 
 import org.apache.storm.mongodb.common.QueryFilterCreator;
 import org.apache.storm.tuple.ITuple;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Filters;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class AthenaQueryFilterCreator implements QueryFilterCreator {
 
@@ -25,27 +27,6 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
                     baseFilter = Filters.eq(field, input.getValueByField(field));
                 } else {
                     baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
-                }
-            }
-        }
-        return baseFilter;
-    }
-
-    public Bson createFilter(ITuple input, String from, String to) {
-        Bson baseFilter = null;
-        for(String field: fields) {
-            String tempField = null;
-            if (from != null && to != null) {
-                if (field.equals(from)) {
-                    tempField = field;
-                    field = to;
-                }
-            }
-            if(input.contains(tempField == null ? field : tempField)) {
-                if (baseFilter == null) {
-                    baseFilter = Filters.eq(field, input.getValueByField(tempField == null ? field : tempField));
-                } else {
-                    baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(tempField == null ? field : tempField)));
                 }
             }
         }
@@ -79,6 +60,28 @@ public class AthenaQueryFilterCreator implements QueryFilterCreator {
         }
         Bson timeFilter = Filters.lt("issueTime", input.getValueByField("issueTime"));
         baseFilter = Filters.and(baseFilter, timeFilter);
+        return baseFilter;
+    }
+
+    public Bson createFilterActionType(ITuple input, String[] dataFields) {
+        Bson baseFilter = null;
+        for(String field: fields) {
+            if(input.contains(field)) {
+                if (Arrays.asList(dataFields).contains(field)) {
+                    if (baseFilter == null) {
+                        baseFilter = Filters.eq("data", new Document(field, input.getValueByField(field)));
+                    } else {
+                        baseFilter = Filters.and(baseFilter, Filters.eq("data", new Document(field, input.getValueByField(field))));
+                    }
+                } else {
+                    if (baseFilter == null) {
+                        baseFilter = Filters.eq(field, input.getValueByField(field));
+                    } else {
+                        baseFilter = Filters.and(baseFilter, Filters.eq(field, input.getValueByField(field)));
+                    }
+                }
+            }
+        }
         return baseFilter;
     }
 

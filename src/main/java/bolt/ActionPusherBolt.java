@@ -57,7 +57,6 @@ public class ActionPusherBolt extends BaseRichBolt {
 
             if(batchHelper.shouldFlush()) {
                 flushTuples();
-                batchHelper.ack();
             }
         } catch (Exception e) {
             batchHelper.fail(e);
@@ -85,15 +84,26 @@ public class ActionPusherBolt extends BaseRichBolt {
         for (Tuple t : batchHelper.getBatchTuples()) {
             Bson idFilter;
             Document updateDoc = toDocument(t);
-            if (t.contains("_id")) {
-                idFilter = Filters.eq("_id", t.getValueByField("_id"));
-            } else {
-                Bson filter = queryCreator.customCreateSession(t);
-                Bson timeFilter = Filters.eq("issueTime", -1);
-                Document targetSession = mongoClient.findLatest(filter, timeFilter).first();
-                idFilter = Filters.eq("_id", targetSession.get("_id"));
+            try {
+                if (t.contains("_id")) {
+                    idFilter = Filters.eq("_id", t.getValueByField("_id"));
+                    mongoClient.update(idFilter, updateDoc, upsert, many);
+                    collector.ack(t);
+                } else {
+                    Bson filter = queryCreator.customCreateSession(t);
+                    Bson timeFilter = Filters.eq("issueTime", -1);
+                    Document targetSession = mongoClient.findLatest(filter, timeFilter).first();
+                    idFilter = Filters.eq("_id", targetSession.get("_id"));
+                    if (idFilter != null) {
+                        mongoClient.update(idFilter, updateDoc, upsert, many);
+                        collector.ack(t);
+                    } else {
+                        collector.fail(t);
+                    }
+                }
+            } catch (Exception e) {
+                collector.fail(t);
             }
-            mongoClient.update(idFilter, updateDoc, upsert, many);
         }
     }
 

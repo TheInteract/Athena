@@ -10,6 +10,7 @@ import org.apache.storm.tuple.Values;
 import org.bson.Document;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class AthenaLookupMapper implements MongoLookupMapper {
@@ -50,6 +51,26 @@ public class AthenaLookupMapper implements MongoLookupMapper {
                 document.append(field, input.getValueByField(field));
             } else {
                 document.append(field, "To be added");
+            }
+        }
+        return document;
+    }
+
+    public Document toDocumentActionType(ITuple input, String[] dataFields) {
+        Document document = new Document();
+        for(String field : fields){
+            if (Arrays.asList(dataFields).contains(field)) {
+                if(input.contains(field)) {
+                    document.append("data", new Document(field, input.getValueByField(field)));
+                } else {
+                    document.append("data", new Document(field, "To be added"));
+                }
+            } else {
+                if(input.contains(field)) {
+                    document.append(field, input.getValueByField(field));
+                } else {
+                    document.append(field, "To be added");
+                }
             }
         }
         return document;

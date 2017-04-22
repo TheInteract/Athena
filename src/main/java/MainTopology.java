@@ -32,10 +32,10 @@ public class MainTopology {
     private static void setupSpout() {
 
         builder.setSpout("loadSpout", new EventSpout(redisHost,redisPort,"onload", Load.class, loadField));
-        builder.setSpout("focusSpout", new EventSpout(redisHost,redisPort,"onfocus", Focus.class, focusField));
         builder.setSpout("mouseClickSpout", new EventSpout(redisHost,redisPort,"onclick", MouseClick.class, mouseClickField));
         builder.setSpout("APICallSpout", new EventSpout(redisHost,redisPort,"onAPICall", APICall.class, APICallField));
-        builder.setSpout("blurSpout", new EventSpout(redisHost,redisPort,"onblur", Blur.class, blurField));
+//        builder.setSpout("focusSpout", new EventSpout(redisHost,redisPort,"onfocus", Focus.class, focusField));
+//        builder.setSpout("blurSpout", new EventSpout(redisHost,redisPort,"onblur", Blur.class, blurField));
 //        builder.setSpout("unloadSpout", new EventSpout(redisHost,redisPort,"onunload", Unload.class, unloadField));
     }
 
@@ -298,10 +298,10 @@ public class MainTopology {
         setupSpout();
 
         setupLoadBolts();
-        setupFocusBolts();
         setupMouseClickBolts();
         setupAPICallBolts();
-        setupBlurBolts();
+//        setupFocusBolts();
+//        setupBlurBolts();
 //        setupUnloadBolts();
 
 
