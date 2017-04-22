@@ -86,7 +86,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "url", "scrollX", "scrollY", "innerHeight", "innerWidth", "appCode", "appName", "appVersion"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("loadUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 2).shuffleGrouping("loadSessionCreatorBolt");
+        builder.setBolt("loadUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 1).withUpsert(false).withMany(false), 2).shuffleGrouping("loadSessionCreatorBolt");
     }
 
     private static void setupFocusBolts() {
@@ -118,7 +118,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "url", "innerHeight", "innerWidth"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("focusUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("focusActionTypeCreatorBolt");
+        builder.setBolt("focusUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 2).withUpsert(false).withMany(false), 1).shuffleGrouping("focusActionTypeCreatorBolt");
     }
 
     private static void setupMouseClickBolts() {
@@ -151,7 +151,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "target"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("mouseClickUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("mouseClickActionTypeCreatorBolt");
+        builder.setBolt("mouseClickUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 2).withUpsert(false).withMany(false), 1).shuffleGrouping("mouseClickActionTypeCreatorBolt");
     }
 
     private static void setupAPICallBolts() {
@@ -184,7 +184,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "endpoint", "method"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("APICallUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("APICallActionTypeCreatorBolt");
+        builder.setBolt("APICallUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 2).withUpsert(false).withMany(false), 1).shuffleGrouping("APICallActionTypeCreatorBolt");
     }
 
     private static void setupBlurBolts() {
@@ -217,7 +217,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId", "timeStamp", "url"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("blurUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("blurActionTypeCreatorBolt");
+        builder.setBolt("blurUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 2).withUpsert(false).withMany(false), 1).shuffleGrouping("blurActionTypeCreatorBolt");
     }
 
     private static void setupUnloadBolts() {
@@ -250,7 +250,7 @@ public class MainTopology {
 
         String[] actionFields = {"issueTime", "type", "actionTypeId"};
         AthenaQueryFilterCreator updateFilterCreator = new AthenaQueryFilterCreator().withField("userId", "deviceCode", "productId", "sessionCode");
-        builder.setBolt("unloadUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields).withUpsert(false).withMany(false), 1).shuffleGrouping("unloadActionTypeCreatorBolt");
+        builder.setBolt("unloadUpdateClickBolt", new ActionPusherBolt(url, "session", updateFilterCreator, actionFields, 2).withUpsert(false).withMany(false), 1).shuffleGrouping("unloadActionTypeCreatorBolt");
     }
 
     private static String[] replaceFieldElement(String[] input, String from, String to) {

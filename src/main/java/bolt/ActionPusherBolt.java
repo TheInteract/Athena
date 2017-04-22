@@ -23,7 +23,6 @@ import java.util.Map;
 
 public class ActionPusherBolt extends BaseRichBolt {
 
-    private static final int DEFAULT_FLUSH_INTERVAL_SECS = 1;
 
     private AthenaQueryFilterCreator queryCreator;
     private String url, collectionName;
@@ -34,16 +33,16 @@ public class ActionPusherBolt extends BaseRichBolt {
 
     private BatchHelper batchHelper;
     private int batchSize = 15000;
-    private int flushIntervalSecs = DEFAULT_FLUSH_INTERVAL_SECS;
+    private int flushIntervalSecs;
 
     private boolean upsert;  //the default is false.
     private boolean many;  //the default is false.
 
-    public ActionPusherBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, String[] actionsFields) {
+    public ActionPusherBolt(String url, String collectionName, AthenaQueryFilterCreator queryCreator, String[] actionsFields, int flushInterval) {
         this.url = url;
         this.collectionName = collectionName;
         this.actionFields = actionsFields;
-
+        this.flushIntervalSecs = flushInterval;
 //        Validate.notNull(queryCreator, "QueryFilterCreator can not be null");
 
         this.queryCreator = queryCreator;
@@ -88,15 +87,13 @@ public class ActionPusherBolt extends BaseRichBolt {
             Document updateDoc = toDocument(t);
             if (t.contains("_id")) {
                 idFilter = Filters.eq("_id", t.getValueByField("_id"));
-                mongoClient.update(idFilter, updateDoc, upsert, many);
-                this.collector.ack(t);
             } else {
                 Bson filter = queryCreator.customCreateSession(t);
                 Bson timeFilter = Filters.eq("issueTime", -1);
                 Document targetSession = mongoClient.findLatest(filter, timeFilter).first();
                 idFilter = Filters.eq("_id", targetSession.get("_id"));
-                mongoClient.update(idFilter, updateDoc, upsert, many);
             }
+            mongoClient.update(idFilter, updateDoc, upsert, many);
         }
     }
 
